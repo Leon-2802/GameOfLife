@@ -35,6 +35,7 @@ namespace GameOfLife
             this.resetBtn = new System.Windows.Forms.Button();
             this.startBtn = new System.Windows.Forms.Button();
             this.advanceBtn = new System.Windows.Forms.Button();
+            this.clearBtn = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.gameArea)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCSize)).BeginInit();
             this.SuspendLayout();
@@ -105,7 +106,7 @@ namespace GameOfLife
             this.resetBtn.Name = "resetBtn";
             this.resetBtn.Size = new System.Drawing.Size(70, 23);
             this.resetBtn.TabIndex = 3;
-            this.resetBtn.Text = "Reset";
+            this.resetBtn.Text = "Random";
             this.resetBtn.UseVisualStyleBackColor = false;
             this.resetBtn.Click += new System.EventHandler(this.ResetBtn_Click);
             // 
@@ -137,12 +138,25 @@ namespace GameOfLife
             this.advanceBtn.UseVisualStyleBackColor = false;
             this.advanceBtn.Click += new System.EventHandler(this.AdvanceBtn_Click);
             // 
+            // clearBtn
+            // 
+            this.clearBtn.BackColor = System.Drawing.Color.Gray;
+            this.clearBtn.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.clearBtn.Location = new System.Drawing.Point(230, 546);
+            this.clearBtn.Name = "clearBtn";
+            this.clearBtn.Size = new System.Drawing.Size(75, 23);
+            this.clearBtn.TabIndex = 6;
+            this.clearBtn.Text = "Clear";
+            this.clearBtn.UseVisualStyleBackColor = false;
+            this.clearBtn.Click += new System.EventHandler(this.clearBtn_Click);
+            // 
             // GameOfLife
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(944, 581);
+            this.Controls.Add(this.clearBtn);
             this.Controls.Add(this.advanceBtn);
             this.Controls.Add(this.startBtn);
             this.Controls.Add(this.resetBtn);
@@ -169,6 +183,7 @@ namespace GameOfLife
         private System.Windows.Forms.Button resetBtn;
         private System.Windows.Forms.Button startBtn;
         private System.Windows.Forms.Button advanceBtn;
+        private System.Windows.Forms.Button clearBtn;
     }
 }
 

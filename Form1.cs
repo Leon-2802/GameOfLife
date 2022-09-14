@@ -25,10 +25,10 @@ namespace GameOfLife
 
         private void Load_GameOfLife(object sender, EventArgs e)
         {
-            CreateGridSurface();
+            CreateGridSurface(true);
         }
 
-        private void CreateGridSurface()
+        private void CreateGridSurface(bool randomCells)
         {
             Point locPoint;
             Cell newCell;
@@ -57,7 +57,12 @@ namespace GameOfLife
                     {
                         locPoint = new Point((int)(x * numCSize.Value), (int)(y * numCSize.Value));
                         newCell = new Cell(locPoint, x, y);
-                        newCell.IsAlive = (random.Next(100) < 15) ? true : false; //true wenn kleiner als 15, false wenn größer
+
+                        if(!randomCells)
+                            newCell.IsAlive = false;
+                        else
+                            newCell.IsAlive = (random.Next(100) < 15) ? true : false; //true wenn kleiner als 15, false wenn größer
+
                         Grid.gridCells.Add(newCell);
                     }
                 }
@@ -81,8 +86,13 @@ namespace GameOfLife
 
         private void ResetBtn_Click(object sender, EventArgs e)
         {
-            CreateGridSurface();
+            CreateGridSurface(true);
         }
+        private void clearBtn_Click(object sender, EventArgs e)
+        {
+            CreateGridSurface(false);
+        }
+
         private void AdvanceBtn_Click(object sender, EventArgs e)
         {
             GetNextState();
