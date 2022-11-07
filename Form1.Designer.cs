@@ -140,6 +140,7 @@ namespace GameOfLife
             // 
             // clearBtn
             // 
+            this.clearBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.clearBtn.BackColor = System.Drawing.Color.Gray;
             this.clearBtn.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.clearBtn.Location = new System.Drawing.Point(230, 546);
