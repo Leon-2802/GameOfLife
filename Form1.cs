@@ -157,8 +157,28 @@ namespace GameOfLife
             4. Jede tote Zelle mit genau 3 Nachbarn wird wiederbelebt
             */
 
+            void ComputeCellState(Cell cell)
+            {
+                int activeCount = CellGrid.LiveAdjacent(cell);
+
+                if (cell.IsAlive)
+                {
+                    if ((activeCount < 2) || (activeCount > 3))
+                        cell.AllowLiving = false;
+                    else
+                        cell.AllowLiving = true;
+                }
+                else
+                {
+                    if (activeCount == 3)
+                        cell.AllowLiving = true;
+                }
+            }
+
             foreach(Cell cell in Grid.gridCells)
             {
+                //Thread t = new Thread(() => ComputeCellState(cell));
+                //t.Start();
                 int activeCount = CellGrid.LiveAdjacent(cell);
 
                 if (cell.IsAlive)
@@ -237,22 +257,36 @@ namespace GameOfLife
         {
             int liveAdjacent = 0;
 
-            int cellIndex = cell.YPos * this.Cols + cell.XPos; //Formel für index
-            int startIndex = cellIndex - this.Cols - 2;
-            int endIndex = cellIndex + this.Cols + 2;
+            int cellIndex = cell.YPos * this.Cols + cell.XPos; //formula for index
 
-            //Verhindern, dass indezes über range des Grids gehen
-            startIndex = (startIndex < 0) ? 0 : startIndex;
-            endIndex = (endIndex > (Grid.gridCells.Count - 1)) ? Grid.gridCells.Count - 1 : endIndex;
+            //compute index of all neighbours
+            int upperLeft = cellIndex - this.Cols - 1;
+            int upperMiddle = cellIndex - this.Cols;
+            int upperRight = cellIndex - this.Cols +1;
+            int middleLeft = cellIndex - 1;
+            int middleRight = cellIndex + 1;
+            int bottomLeft = cellIndex + this.Cols -1;
+            int bottomMiddle = cellIndex + this.Cols;
+            int bottomRight = cellIndex + this.Cols +1;
 
-            for (int i = startIndex; i < endIndex; i++)
-            {
-                if (Math.Abs(cell.XPos - gridCells[i].XPos) < 2 && Math.Abs(cell.YPos - gridCells[i].YPos) < 2)
-                {
-                    if (Grid.gridCells[i].IsAlive && Grid.gridCells[i].Location != cell.Location)
-                        liveAdjacent++;
-                }
-            }
+            //check if index still in bounds and if cell is alive -> if all arguments are true = neighbour exists and is alive
+            if (upperLeft >= 0 && Grid.gridCells[upperLeft].IsAlive)
+                liveAdjacent++;
+            if (upperMiddle >= 0 && Grid.gridCells[upperMiddle].IsAlive)
+                liveAdjacent++;
+            if (upperRight >= 0 && upperRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[upperRight].IsAlive)
+                liveAdjacent++;
+            if (middleLeft >= 0 && Grid.gridCells[middleLeft].IsAlive)
+                liveAdjacent++;
+            if (middleRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[middleRight].IsAlive)
+                liveAdjacent++;
+            if (bottomLeft >= 0 && bottomLeft <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomLeft].IsAlive)
+                liveAdjacent++;
+            if (bottomMiddle <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomMiddle].IsAlive)
+                liveAdjacent++;
+            if (bottomRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomRight].IsAlive)
+                liveAdjacent++;
+
 
             return liveAdjacent;
         }
