@@ -4,6 +4,22 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <Authors>Leon Gobbert</Authors>
+    <PackageIcon>gol-icon.png</PackageIcon>
+    <ApplicationIcon>gol-icon.ico</ApplicationIcon>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <IncludeSymbols>False</IncludeSymbols>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="gol-icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Pictures\gol-icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

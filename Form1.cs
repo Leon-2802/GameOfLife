@@ -223,6 +223,7 @@ namespace GameOfLife
                     
                 gameArea.Image.Dispose();
                 gameArea.Image = (Bitmap)bmp.Clone();
+
             }
         }
 
