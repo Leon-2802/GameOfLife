@@ -13,6 +13,7 @@ using System.Windows.Forms;
 
 namespace GameOfLife
 {
+    // We keep our logic in a partial class in order to seperate it from the auto generated UI code
     public partial class GameOfLife : Form
     {
         Boolean running = false;
@@ -28,6 +29,7 @@ namespace GameOfLife
             CreateGridSurface(true);
         }
 
+        // REFACTOR: Only english comments
         private void CreateGridSurface(bool randomCells)
         {
             Point locPoint;
@@ -147,6 +149,7 @@ namespace GameOfLife
             Application.Exit();
         }
 
+        // REFACTOR: unused internal method ComputeCellState
         private void GetNextState()
         {
             //Angrenzende Zellen prüfen auf IsAlive und Position -> Grid Updaten
@@ -227,117 +230,5 @@ namespace GameOfLife
             }
         }
 
-    }
-
-    public class Grid
-    {
-        public static List<Cell> gridCells = new List<Cell>();
-
-        private int rows;
-        private int cols;
-
-        public Grid(int rows, int cols)
-        {
-            this.Rows = rows;
-            this.Cols = cols;
-        }
-
-        public int Rows
-        {
-           get { return rows; } 
-           set { rows = value; } 
-        }
-
-        public int Cols
-        {
-            get { return cols; }
-            set { cols = value; }
-        }
-
-        public int LiveAdjacent(Cell cell)
-        {
-            int liveAdjacent = 0;
-
-            int cellIndex = cell.YPos * this.Cols + cell.XPos; //formula for index
-
-            //compute index of all neighbours
-            int upperLeft = cellIndex - this.Cols - 1;
-            int upperMiddle = cellIndex - this.Cols;
-            int upperRight = cellIndex - this.Cols +1;
-            int middleLeft = cellIndex - 1;
-            int middleRight = cellIndex + 1;
-            int bottomLeft = cellIndex + this.Cols -1;
-            int bottomMiddle = cellIndex + this.Cols;
-            int bottomRight = cellIndex + this.Cols +1;
-
-            //check if index still in bounds and if cell is alive -> if all arguments are true = neighbour exists and is alive
-            if (upperLeft >= 0 && Grid.gridCells[upperLeft].IsAlive)
-                liveAdjacent++;
-            if (upperMiddle >= 0 && Grid.gridCells[upperMiddle].IsAlive)
-                liveAdjacent++;
-            if (upperRight >= 0 && upperRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[upperRight].IsAlive)
-                liveAdjacent++;
-            if (middleLeft >= 0 && Grid.gridCells[middleLeft].IsAlive)
-                liveAdjacent++;
-            if (middleRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[middleRight].IsAlive)
-                liveAdjacent++;
-            if (bottomLeft >= 0 && bottomLeft <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomLeft].IsAlive)
-                liveAdjacent++;
-            if (bottomMiddle <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomMiddle].IsAlive)
-                liveAdjacent++;
-            if (bottomRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomRight].IsAlive)
-                liveAdjacent++;
-
-
-            return liveAdjacent;
-        }
-    }
-
-    public class Cell
-    {
-        private Point location;
-        private int xPos;
-        private int yPos;
-        private Boolean isAlive;
-        private Boolean allowLiving;
-
-        public Cell(Point location, int x, int y)
-        {
-            this.Location = location;
-            this.XPos = x;
-            this.YPos = y;
-        }
-
-        public Point Location
-        {
-            get { return location; }
-            set { location = value; }
-        }
-        public int XPos
-        {
-            get { return xPos; }
-            set { xPos = value; }
-        }
-        public int YPos
-        {
-            get { return yPos; }
-            set { yPos = value; }
-        }
-        public Boolean IsAlive
-        {
-            get { return isAlive; }
-            set { isAlive = value; }
-        }
-        public Boolean AllowLiving
-        {
-            get { return allowLiving; }
-            set { allowLiving = value; }
-        }
-
-        public override string ToString()
-        {
-            //Override the way list is printed out:
-            return $"GridX:{this.XPos} GridY:{this.YPos} LocX{this.Location.X} LocY:{this.Location.Y}";
-        }
     }
 }
