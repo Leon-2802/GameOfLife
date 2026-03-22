@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GameOfLife
@@ -11,7 +8,7 @@ namespace GameOfLife
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
-        [STAThread]
+        [STAThread] //  required for WinForms: Windows controls are not thread-safe 
         static void Main()
         {
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
