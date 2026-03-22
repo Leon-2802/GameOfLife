@@ -1,27 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GameOfLife
 {
-    // We keep our logic in a partial class in order to seperate it from the auto generated UI code
+    // We keep our logic in a partial class in order to seperate it from the auto generated UI code in GameOfLife.Designer.cs
     public partial class GameOfLife : Form
     {
-        Boolean running = false;
-        Grid CellGrid;
+        private Boolean running = false;
+        private System.Windows.Forms.Timer gameTimer = new System.Windows.Forms.Timer();
+        private Grid cellGrid;
 
         public GameOfLife()
         {
             InitializeComponent();
+            // System.Windows.Forms.Timer fires the registered method at regular intervals without blocking the UI Thread
+            gameTimer.Interval = 100; // ms between ticks
+            gameTimer.Tick += (s, e) => GetNextState(); // method to be thrown at each tick
         }
 
         private void Load_GameOfLife(object sender, EventArgs e)
@@ -29,21 +27,17 @@ namespace GameOfLife
             CreateGridSurface(true);
         }
 
-        // REFACTOR: Only english comments
         private void CreateGridSurface(bool randomCells)
         {
-            Point locPoint;
-            Cell newCell;
             Random random = new Random();
 
             int rows = (int)(gameArea.Height / numCSize.Value);
             int cols = (int)(gameArea.Width / numCSize.Value);
 
-            //Create Grid Object
-            CellGrid = new Grid(rows, cols);
+            cellGrid = new Grid(rows, cols);
 
 
-            //using innnerhalb der Klammern limitiert die Existenz der Objekte auf diese Methode -> weniger Memory Müll
+            // Limit existense of included objects to the scope of this method
             using (Bitmap bmp = new Bitmap(gameArea.Width, gameArea.Height))
             using (Graphics g = Graphics.FromImage(bmp))
             using (SolidBrush cellBrush = new SolidBrush(Color.Green))
@@ -51,37 +45,40 @@ namespace GameOfLife
                 g.Clear(Color.Black);
                 gameArea.Image = (Bitmap)bmp.Clone();
 
-                Grid.gridCells.Clear();
+                cellGrid.Cells.Clear();
+                Cell newCell;
 
+                // Create and add cells to the Grid object in row-major order
                 for(int y = 0; y < rows; y++)
                 {
                     for(int x = 0; x < cols; x++)
                     {
-                        locPoint = new Point((int)(x * numCSize.Value), (int)(y * numCSize.Value));
-                        newCell = new Cell(locPoint, x, y);
+                        newCell = new Cell(
+                            new Point((int)(x * numCSize.Value), (int)(y * numCSize.Value)), 
+                            x, 
+                            y);
 
                         if(!randomCells)
                             newCell.IsAlive = false;
                         else
-                            newCell.IsAlive = (random.Next(100) < 15) ? true : false; //true wenn kleiner als 15, false wenn größer
+                            newCell.IsAlive = (random.Next(100) < 15); // true if smaller than 15
 
-                        Grid.gridCells.Add(newCell);
+                        cellGrid.Cells.Add(newCell);
                     }
                 }
-
-                Grid.gridCells = Grid.gridCells.OrderBy(c => c.XPos).OrderBy(c => c.YPos).ToList(); //nach y und x ordnen (wie im for loop vorgegeben)          
-
-                //Alle neuen Cells ins Grid laden:
-                foreach (Cell cell in Grid.gridCells)
+        
+                // Load all new cells into the grid
+                foreach (Cell cell in cellGrid.Cells)
                 {
                     if(cell.IsAlive)
                     {
+                        // PARALLELIZABLE (maybe not worth it due to too much overhead)
                         g.FillRectangle(cellBrush, new Rectangle(cell.Location, 
                             new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
                     }
                 }
 
-                gameArea.Image.Dispose(); //Befreit Memory von Ressourcen des vorherigen Bildes
+                gameArea.Image.Dispose(); // Frees memory of resources of prior image
                 gameArea.Image = (Bitmap)bmp.Clone();
             }
         }
@@ -106,18 +103,13 @@ namespace GameOfLife
 
             startBtn.Text = running ? "Stop" : "Start";
 
-            while(running)
+            if (running )
             {
-                var watch = System.Diagnostics.Stopwatch.StartNew();
-                GetNextState();
-                Application.DoEvents(); //Wait for operations to finish
-                watch.Stop();
-                var elapsedMs = watch.ElapsedMilliseconds;
-                if(elapsedMs < 101)
-                {
-                    int sleepTime = 100 - (int)elapsedMs;
-                    Thread.Sleep(sleepTime);
-                }
+                gameTimer.Start();
+            }
+            else
+            {
+                gameTimer.Stop();
             }
         }
 
@@ -125,80 +117,42 @@ namespace GameOfLife
         {
             int cellIndex;
 
-            //Get cell size 
+            // Get cell size 
             int cellSize = (int) numCSize.Value;
 
-            //Get the correct square on the grid, the mouse is hovering on
+            // Get the correct square on the grid, the mouse is hovering on
             int Xloc = e.X / cellSize;
             int YLoc = e.Y / cellSize;
 
 
-            //Get cell list index from grid index
-            cellIndex = (YLoc * CellGrid.Cols) + Xloc; // ! Formel für index
+            // Get cell list index from grid index
+            cellIndex = (YLoc * cellGrid.Cols) + Xloc;
 
-            //Flip state of cell between dead and alive
-            Grid.gridCells[cellIndex].IsAlive = !Grid.gridCells[cellIndex].IsAlive;
+            // Flip state of cell between dead and alive
+            cellGrid.Cells[cellIndex].IsAlive = !cellGrid.Cells[cellIndex].IsAlive;
 
             UpdateGrid();
         }
 
         private void GameOfLife_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //End program when closing window
+            // End program when closing window
             running = false;
             Application.Exit();
         }
 
-        // REFACTOR: unused internal method ComputeCellState
         private void GetNextState()
         {
-            //Angrenzende Zellen prüfen auf IsAlive und Position -> Grid Updaten
-            /*
-            1. Weniger als zwei Nachbarn -> Tod
-            2. Zwei oder Drei Nachbarn -> bleibt am Leben
-            3. Mehr als drei Nachbarn -> Tod
-            4. Jede tote Zelle mit genau 3 Nachbarn wird wiederbelebt
-            */
+            // Check if each cell is allowed to live according to the adjacency rules (see rules in Cell class)
 
-            void ComputeCellState(Cell cell)
+            foreach(Cell cell in cellGrid.Cells)
             {
-                int activeCount = CellGrid.LiveAdjacent(cell);
-
-                if (cell.IsAlive)
-                {
-                    if ((activeCount < 2) || (activeCount > 3))
-                        cell.AllowLiving = false;
-                    else
-                        cell.AllowLiving = true;
-                }
-                else
-                {
-                    if (activeCount == 3)
-                        cell.AllowLiving = true;
-                }
+                // PARALLELIZABLE
+                int activeCount = cellGrid.LiveAdjacent(cell);
+                cell.ComputeCellState(activeCount);
             }
 
-            foreach(Cell cell in Grid.gridCells)
-            {
-                //Thread t = new Thread(() => ComputeCellState(cell));
-                //t.Start();
-                int activeCount = CellGrid.LiveAdjacent(cell);
-
-                if (cell.IsAlive)
-                {
-                    if ((activeCount < 2) || (activeCount > 3))
-                        cell.AllowLiving = false;
-                    else
-                        cell.AllowLiving = true;
-                }
-                else
-                {
-                    if (activeCount == 3)
-                        cell.AllowLiving = true;
-                }
-            }
-
-            foreach(Cell cell in Grid.gridCells)
+            foreach(Cell cell in cellGrid.Cells)
             {
                 cell.IsAlive = cell.AllowLiving;
             }
@@ -214,10 +168,11 @@ namespace GameOfLife
             {
                 g.Clear(Color.Black);
 
-                foreach (Cell cell in Grid.gridCells)
+                foreach (Cell cell in cellGrid.Cells)
                 {
                     if (cell.IsAlive)
                     {
+                        // PARALLELIZABLE (maybe not worth it due to too much overhead)
                         g.FillRectangle(cellBrush, new Rectangle(cell.Location,
                             new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
                     }
@@ -226,7 +181,6 @@ namespace GameOfLife
                     
                 gameArea.Image.Dispose();
                 gameArea.Image = (Bitmap)bmp.Clone();
-
             }
         }
 

@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameOfLife
 {
     public class Grid
     {
-        // REFACTOR: better private?
-        public static List<Cell> gridCells = new List<Cell>();
+        public List<Cell> Cells { get; } = new List<Cell>();
 
         private int rows;
         private int cols;
@@ -32,43 +29,27 @@ namespace GameOfLife
             set { cols = value; }
         }
 
-        // REFACTOR METHOD
         public int LiveAdjacent(Cell cell)
         {
-            int liveAdjacent = 0;
+            var neighbourOffsets = new (int dx, int dy)[]
+            {
+                (-1, -1), (0, -1), (1, -1),
+                (-1,  0),          (1,  0),
+                (-1,  1), (0,  1), (1,  1)
+            };
 
-            int cellIndex = cell.YPos * this.Cols + cell.XPos; //formula for index
+            // Count how many neighbour-cells satisfy the condition "IsAlive"
+            return neighbourOffsets.Count(offset => IsAliveAt(cell.XPos + offset.dx, cell.YPos + offset.dy));
+        }
 
-            //compute index of all neighbours
-            int upperLeft = cellIndex - this.Cols - 1;
-            int upperMiddle = cellIndex - this.Cols;
-            int upperRight = cellIndex - this.Cols + 1;
-            int middleLeft = cellIndex - 1;
-            int middleRight = cellIndex + 1;
-            int bottomLeft = cellIndex + this.Cols - 1;
-            int bottomMiddle = cellIndex + this.Cols;
-            int bottomRight = cellIndex + this.Cols + 1;
+        private bool IsAliveAt(int x, int y)
+        {
+            // Bounds check
+            if (x < 0 || x >= Cols) return false;
+            if (y < 0 || y >= Rows) return false;
 
-            //check if index still in bounds and if cell is alive -> if all arguments are true = neighbour exists and is alive
-            if (upperLeft >= 0 && Grid.gridCells[upperLeft].IsAlive)
-                liveAdjacent++;
-            if (upperMiddle >= 0 && Grid.gridCells[upperMiddle].IsAlive)
-                liveAdjacent++;
-            if (upperRight >= 0 && upperRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[upperRight].IsAlive)
-                liveAdjacent++;
-            if (middleLeft >= 0 && Grid.gridCells[middleLeft].IsAlive)
-                liveAdjacent++;
-            if (middleRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[middleRight].IsAlive)
-                liveAdjacent++;
-            if (bottomLeft >= 0 && bottomLeft <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomLeft].IsAlive)
-                liveAdjacent++;
-            if (bottomMiddle <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomMiddle].IsAlive)
-                liveAdjacent++;
-            if (bottomRight <= (Grid.gridCells.Count - 1) && Grid.gridCells[bottomRight].IsAlive)
-                liveAdjacent++;
-
-
-            return liveAdjacent;
+            // access from cell list in row-major order
+            return Cells[y * Cols + x].IsAlive; 
         }
     }
 }

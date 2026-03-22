@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameOfLife
 {
@@ -46,6 +42,29 @@ namespace GameOfLife
         {
             get { return allowLiving; }
             set { allowLiving = value; }
+        }
+
+        public void ComputeCellState(int activeCount)
+        {
+            // Rules: 
+            /*
+            1. Less than two neighbours -> Death
+            2. Two or three neighbours -> Stay alive
+            3. More than three neighbours -> Death
+            4. A dead cell with exactly three neighbours is getting revived
+            */
+            if (this.IsAlive)
+            {
+                if ((activeCount < 2) || (activeCount > 3))
+                    this.AllowLiving = false;
+                else
+                    this.AllowLiving = true;
+            }
+            else
+            {
+                if (activeCount == 3)
+                    this.AllowLiving = true;
+            }
         }
 
         public override string ToString()
