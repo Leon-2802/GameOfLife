@@ -29,7 +29,23 @@ namespace GameOfLife
             set { cols = value; }
         }
 
-        public int LiveAdjacent(Cell cell)
+        public void AdvanceOneGeneration()
+        {
+            // Check if each cell is allowed to live according to the adjacency rules (see rules in Cell class)
+            foreach (Cell cell in Cells)
+            {
+                // PARALLELIZABLE
+                int activeCount = this.LiveAdjacent(cell);
+                cell.ComputeCellState(activeCount);
+            }
+
+            foreach (Cell cell in Cells)
+            {
+                cell.IsAlive = cell.AllowLiving;
+            }
+        }
+
+        private int LiveAdjacent(Cell cell)
         {
             var neighbourOffsets = new (int dx, int dy)[]
             {

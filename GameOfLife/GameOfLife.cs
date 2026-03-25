@@ -19,7 +19,7 @@ namespace GameOfLife
             InitializeComponent();
             // System.Windows.Forms.Timer fires the registered method at regular intervals without blocking the UI Thread
             gameTimer.Interval = 100; // ms between ticks
-            gameTimer.Tick += (s, e) => GetNextState(); // method to be thrown at each tick
+            gameTimer.Tick += (s, e) => Advance(); // method to be thrown at each tick
         }
 
         private void Load_GameOfLife(object sender, EventArgs e)
@@ -73,7 +73,7 @@ namespace GameOfLife
                     if(cell.IsAlive)
                     {
                         // PARALLELIZABLE (maybe not worth it due to too much overhead)
-                        g.FillRectangle(cellBrush, new Rectangle(cell.Location, 
+                        g.FillRectangle(cellBrush, new Rectangle(cell.UILocation, 
                             new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
                     }
                 }
@@ -94,7 +94,7 @@ namespace GameOfLife
 
         private void AdvanceBtn_Click(object sender, EventArgs e)
         {
-            GetNextState();
+            Advance();
         }
 
         private void StartBtn_Click(object sender, EventArgs e)
@@ -141,22 +141,9 @@ namespace GameOfLife
             Application.Exit();
         }
 
-        private void GetNextState()
+        private void Advance()
         {
-            // Check if each cell is allowed to live according to the adjacency rules (see rules in Cell class)
-
-            foreach(Cell cell in cellGrid.Cells)
-            {
-                // PARALLELIZABLE
-                int activeCount = cellGrid.LiveAdjacent(cell);
-                cell.ComputeCellState(activeCount);
-            }
-
-            foreach(Cell cell in cellGrid.Cells)
-            {
-                cell.IsAlive = cell.AllowLiving;
-            }
-
+            cellGrid.AdvanceOneGeneration();
             UpdateGrid();
         }
 
@@ -173,7 +160,7 @@ namespace GameOfLife
                     if (cell.IsAlive)
                     {
                         // PARALLELIZABLE (maybe not worth it due to too much overhead)
-                        g.FillRectangle(cellBrush, new Rectangle(cell.Location,
+                        g.FillRectangle(cellBrush, new Rectangle(cell.UILocation,
                             new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
                     }
                 }
