@@ -2,7 +2,8 @@
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
+using System.Collections.Concurrent;  // Partitioner
+using System.Threading.Tasks;          // Parallel
 using System.Windows.Forms;
 
 namespace GameOfLife
@@ -24,72 +25,53 @@ namespace GameOfLife
 
         private void Load_GameOfLife(object sender, EventArgs e)
         {
-            CreateGridSurface(true);
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            InitializeCellGrid(true);
+            watch.Stop();
+            Console.WriteLine(watch.ElapsedMilliseconds.ToString());
+            UpdateCellGridView();
         }
 
-        private void CreateGridSurface(bool randomCells)
+        private void InitializeCellGrid(bool randomCells)
         {
-            Random random = new Random();
-
-            int rows = (int)(gameArea.Height / numCSize.Value);
-            int cols = (int)(gameArea.Width / numCSize.Value);
+            int rows = 10_000;
+            int cols = 10_000;
 
             cellGrid = new Grid(rows, cols);
+            cellGrid.Cells.Clear();
+            // Allocate the row's cells upfront for index access
+            Cell[] rowCells  = new Cell[cols];
 
-
-            // Limit existense of included objects to the scope of this method
-            using (Bitmap bmp = new Bitmap(gameArea.Width, gameArea.Height))
-            using (Graphics g = Graphics.FromImage(bmp))
-            using (SolidBrush cellBrush = new SolidBrush(Color.Green))
+            // Create and add cells to the Grid object in row-major order
+            for(int y = 0; y < rows; y++)
             {
-                g.Clear(Color.Black);
-                gameArea.Image = (Bitmap)bmp.Clone();
-
-                cellGrid.Cells.Clear();
-                Cell newCell;
-
-                // Create and add cells to the Grid object in row-major order
-                for(int y = 0; y < rows; y++)
+                Parallel.For(0, cols, x =>
                 {
-                    for(int x = 0; x < cols; x++)
-                    {
-                        newCell = new Cell(
-                            new Point((int)(x * numCSize.Value), (int)(y * numCSize.Value)), 
-                            x, 
-                            y);
+                    Cell newCell = new Cell(
+                        new Point((int)(x * numCSize.Value), (int)(y * numCSize.Value)),
+                        x,
+                        y);
 
-                        if(!randomCells)
-                            newCell.IsAlive = false;
-                        else
-                            newCell.IsAlive = (random.Next(100) < 15); // true if smaller than 15
+                    newCell.IsAlive = randomCells && (Random.Shared.Next(100) < 15);
+                    rowCells[x] = newCell;
+                });
 
-                        cellGrid.Cells.Add(newCell);
-                    }
-                }
-        
-                // Load all new cells into the grid
-                foreach (Cell cell in cellGrid.Cells)
+                // Single-threaded add after parallel work is done
+                foreach (Cell cell in rowCells)
                 {
-                    if(cell.IsAlive)
-                    {
-                        // PARALLELIZABLE (maybe not worth it due to too much overhead)
-                        g.FillRectangle(cellBrush, new Rectangle(cell.UILocation, 
-                            new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
-                    }
+                    cellGrid.Cells.Add(cell);
                 }
-
-                gameArea.Image.Dispose(); // Frees memory of resources of prior image
-                gameArea.Image = (Bitmap)bmp.Clone();
+                rowCells = new Cell[cols];
             }
         }
 
         private void ResetBtn_Click(object sender, EventArgs e)
         {
-            CreateGridSurface(true);
+            InitializeCellGrid(true);
         }
         private void clearBtn_Click(object sender, EventArgs e)
         {
-            CreateGridSurface(false);
+            InitializeCellGrid(false);
         }
 
         private void AdvanceBtn_Click(object sender, EventArgs e)
@@ -131,7 +113,7 @@ namespace GameOfLife
             // Flip state of cell between dead and alive
             cellGrid.Cells[cellIndex].IsAlive = !cellGrid.Cells[cellIndex].IsAlive;
 
-            UpdateGrid();
+            UpdateCellGridView();
         }
 
         private void GameOfLife_FormClosing(object sender, FormClosingEventArgs e)
@@ -143,30 +125,38 @@ namespace GameOfLife
 
         private void Advance()
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             cellGrid.AdvanceOneGeneration();
-            UpdateGrid();
+            watch.Stop();
+            Console.WriteLine(watch.ElapsedMilliseconds.ToString());
+            UpdateCellGridView();
         }
 
-        private void UpdateGrid()
+        private void UpdateCellGridView()
         {
+            // Limit existense of included objects to the scope of this method
             using (Bitmap bmp = new Bitmap(gameArea.Width, gameArea.Height))
             using (Graphics g = Graphics.FromImage(bmp))
             using (SolidBrush cellBrush = new SolidBrush(Color.Green))
             {
                 g.Clear(Color.Black);
 
-                foreach (Cell cell in cellGrid.Cells)
+                // Starts in top-right corner
+                for (int y = 0;  y < gameArea.Height; y+=(int)numCSize.Value) // REFACTOR: casting to int probably unsafe here
                 {
-                    if (cell.IsAlive)
+                    for (int x = 0; x < gameArea.Width; x+=(int)numCSize.Value)
                     {
-                        // PARALLELIZABLE (maybe not worth it due to too much overhead)
-                        g.FillRectangle(cellBrush, new Rectangle(cell.UILocation,
-                            new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
+                        Cell cell = cellGrid.Cells[y * cellGrid.Rows + x];
+                        if (cell.IsAlive)
+                        {
+                            // PARALLELIZABLE (maybe not worth it due to too much overhead)
+                            g.FillRectangle(cellBrush, new Rectangle(cell.UILocation,
+                                new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
+                        }
                     }
                 }
 
-                    
-                gameArea.Image.Dispose();
+                gameArea.Image?.Dispose(); // keep in mind, that Image is null before first run
                 gameArea.Image = (Bitmap)bmp.Clone();
             }
         }

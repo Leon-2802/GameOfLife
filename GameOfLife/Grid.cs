@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GameOfLife
 {
@@ -32,15 +34,29 @@ namespace GameOfLife
         public void AdvanceOneGeneration()
         {
             // Check if each cell is allowed to live according to the adjacency rules (see rules in Cell class)
-            foreach (Cell cell in Cells)
-            {
-                // PARALLELIZABLE
-                int activeCount = this.LiveAdjacent(cell);
-                cell.ComputeCellState(activeCount);
-            }
+            //foreach (Cell cell in Cells)
+            //{
+            //    // PARALLELIZABLE
+            //    int activeCount = this.LiveAdjacent(cell);
+            //    cell.ComputeCellState(activeCount);
+            //}
+            Parallel.ForEach(
+                Partitioner.Create(0, Cells.Count, 100),
+                range =>
+                {
+                    // loop over the indeces included in the range
+                    for (int i = range.Item1; i < range.Item2; i++)
+                    {
+                        Cell cell = this.Cells[i];
+                        int activeCount = this.LiveAdjacent(cell);
+                        cell.ComputeCellState(activeCount);
+                    }
+                });
 
             foreach (Cell cell in Cells)
             {
+                // Only update the IsAlive properties after the parallel computation of the new cell states (AllowLiving)
+                // That way the new generation is clearly seperated from the state of the prior one
                 cell.IsAlive = cell.AllowLiving;
             }
         }
