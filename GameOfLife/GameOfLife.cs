@@ -132,6 +132,7 @@ namespace GameOfLife
             UpdateCellGridView();
         }
 
+        //REFACTOR: Încorrect display of cells (Tests pass, so generations are correctly computed)
         private void UpdateCellGridView()
         {
             // Limit existense of included objects to the scope of this method

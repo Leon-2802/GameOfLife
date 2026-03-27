@@ -33,13 +33,6 @@ namespace GameOfLife
 
         public void AdvanceOneGeneration()
         {
-            // Check if each cell is allowed to live according to the adjacency rules (see rules in Cell class)
-            //foreach (Cell cell in Cells)
-            //{
-            //    // PARALLELIZABLE
-            //    int activeCount = this.LiveAdjacent(cell);
-            //    cell.ComputeCellState(activeCount);
-            //}
             Parallel.ForEach(
                 Partitioner.Create(0, Cells.Count, 100),
                 range =>
@@ -47,6 +40,7 @@ namespace GameOfLife
                     // loop over the indeces included in the range
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
+                        // Check if each cell is allowed to live according to the adjacency rules (see rules in Cell class)
                         Cell cell = this.Cells[i];
                         int activeCount = this.LiveAdjacent(cell);
                         cell.ComputeCellState(activeCount);
