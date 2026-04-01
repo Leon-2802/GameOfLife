@@ -2,8 +2,8 @@
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Collections.Concurrent;  // Partitioner
-using System.Threading.Tasks;          // Parallel
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GameOfLife
@@ -25,53 +25,20 @@ namespace GameOfLife
 
         private void Load_GameOfLife(object sender, EventArgs e)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            InitializeCellGrid(true);
-            watch.Stop();
-            Console.WriteLine(watch.ElapsedMilliseconds.ToString());
+            cellGrid = new Grid(1_000, 1_000);
+            cellGrid.InitializeGrid((int)numCSize.Value, true);
             UpdateCellGridView();
-        }
-
-        private void InitializeCellGrid(bool randomCells)
-        {
-            int rows = 10_000;
-            int cols = 10_000;
-
-            cellGrid = new Grid(rows, cols);
-            cellGrid.Cells.Clear();
-            // Allocate the row's cells upfront for index access
-            Cell[] rowCells  = new Cell[cols];
-
-            // Create and add cells to the Grid object in row-major order
-            for(int y = 0; y < rows; y++)
-            {
-                Parallel.For(0, cols, x =>
-                {
-                    Cell newCell = new Cell(
-                        new Point((int)(x * numCSize.Value), (int)(y * numCSize.Value)),
-                        x,
-                        y);
-
-                    newCell.IsAlive = randomCells && (Random.Shared.Next(100) < 15);
-                    rowCells[x] = newCell;
-                });
-
-                // Single-threaded add after parallel work is done
-                foreach (Cell cell in rowCells)
-                {
-                    cellGrid.Cells.Add(cell);
-                }
-                rowCells = new Cell[cols];
-            }
         }
 
         private void ResetBtn_Click(object sender, EventArgs e)
         {
-            InitializeCellGrid(true);
+            cellGrid.InitializeGrid((int)numCSize.Value, true);
+            UpdateCellGridView();
         }
-        private void clearBtn_Click(object sender, EventArgs e)
+        private void ClearBtn_Click(object sender, EventArgs e)
         {
-            InitializeCellGrid(false);
+            cellGrid.InitializeGrid((int)numCSize.Value, false);
+            UpdateCellGridView();
         }
 
         private void AdvanceBtn_Click(object sender, EventArgs e)
@@ -128,11 +95,11 @@ namespace GameOfLife
             var watch = System.Diagnostics.Stopwatch.StartNew();
             cellGrid.AdvanceOneGeneration();
             watch.Stop();
-            Console.WriteLine(watch.ElapsedMilliseconds.ToString());
+            Console.WriteLine("Runtime Advance-Step: " + watch.ElapsedMilliseconds.ToString());
             UpdateCellGridView();
         }
 
-        //REFACTOR: Încorrect display of cells (Tests pass, so generations are correctly computed)
+        //REFACTOR: Incorrect display of cells (Tests pass, so generations are correctly computed)
         private void UpdateCellGridView()
         {
             // Limit existense of included objects to the scope of this method
@@ -142,17 +109,20 @@ namespace GameOfLife
             {
                 g.Clear(Color.Black);
 
-                // Starts in top-right corner
-                for (int y = 0;  y < gameArea.Height; y+=(int)numCSize.Value) // REFACTOR: casting to int probably unsafe here
+                int cellSize = (int)numCSize.Value;
+                int visibleCols = Math.Min(gameArea.Width / cellSize, cellGrid.Cols);
+                int visibleRows = Math.Min(gameArea.Height / cellSize, cellGrid.Rows);
+                Console.WriteLine("Visible rows and columns: " + visibleRows + ", " + visibleCols);
+
+                for (int row = 0; row < visibleRows; row++)
                 {
-                    for (int x = 0; x < gameArea.Width; x+=(int)numCSize.Value)
+                    for (int col = 0; col < visibleCols; col++)
                     {
-                        Cell cell = cellGrid.Cells[y * cellGrid.Rows + x];
+                        Cell cell = cellGrid.Cells[row * cellGrid.Cols + col];
                         if (cell.IsAlive)
                         {
-                            // PARALLELIZABLE (maybe not worth it due to too much overhead)
                             g.FillRectangle(cellBrush, new Rectangle(cell.UILocation,
-                                new Size((int)numCSize.Value - 1, (int)numCSize.Value - 1)));
+                                new Size(cellSize - 1, cellSize - 1)));
                         }
                     }
                 }

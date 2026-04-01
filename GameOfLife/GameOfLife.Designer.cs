@@ -149,7 +149,7 @@ namespace GameOfLife
             this.clearBtn.TabIndex = 6;
             this.clearBtn.Text = "Clear";
             this.clearBtn.UseVisualStyleBackColor = false;
-            this.clearBtn.Click += new System.EventHandler(this.clearBtn_Click);
+            this.clearBtn.Click += new System.EventHandler(this.ClearBtn_Click);
             // 
             // GameOfLife
             // 

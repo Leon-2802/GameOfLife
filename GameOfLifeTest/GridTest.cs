@@ -7,7 +7,7 @@ namespace GameOfLife
 {
     public class GridTest
     {
-        private Grid CreateGrid(int rows, int cols, List<(int x, int y)> aliveCells)
+        private static Grid CreateGrid(int rows, int cols, List<(int x, int y)> aliveCells)
         {
             Grid grid = new Grid(rows, cols);
             for (int y = 0; y < rows; y++)
@@ -24,6 +24,96 @@ namespace GameOfLife
             }
 
             return grid;
+        }
+
+        [Fact]
+        public void InitializeGrid_PopulatesCorrectCellCount()
+        {
+            var grid = new Grid(5, 10);
+            grid.InitializeGrid(cellSize: 10, random: false);
+
+            Assert.Equal(50, grid.Cells.Count);
+        }
+
+        [Fact]
+        public void InitializeGrid_CellsHaveCorrectGridCoordinates()
+        {
+            int rows = 3, cols = 4;
+            var grid = new Grid(rows, cols);
+            grid.InitializeGrid(cellSize: 10, random: false);
+
+            for (int y = 0; y < rows; y++)
+            {
+                for (int x = 0; x < cols; x++)
+                {
+                    var cell = grid.Cells[y * cols + x];
+                    Assert.Equal(x, cell.XPos);
+                    Assert.Equal(y, cell.YPos);
+                }
+            }
+        }
+
+        [Fact]
+        public void InitializeGrid_CellsHaveCorrectPixelPositions()
+        {
+            int cellSize = 16;
+            var grid = new Grid(2, 3);
+            grid.InitializeGrid(cellSize, random: false);
+
+            Assert.Equal(new Point(0, 0), grid.Cells[0].UILocation);
+            Assert.Equal(new Point(cellSize, 0), grid.Cells[1].UILocation);
+            Assert.Equal(new Point(2 * cellSize, 0), grid.Cells[2].UILocation);
+            Assert.Equal(new Point(0, cellSize), grid.Cells[3].UILocation);
+        }
+
+        [Fact]
+        public void InitializeGrid_NonRandom_AllCellsAreDead()
+        {
+            var grid = new Grid(4, 4);
+            grid.InitializeGrid(cellSize: 10, random: false);
+
+            Assert.All(grid.Cells, cell => Assert.False(cell.IsAlive));
+        }
+
+        [Fact]
+        public void InitializeGrid_Random_ProducesAtLeastOneLiveCell()
+        {
+            // With a 5x5 grid (25 cells) and a 15% spawn rate,
+            // the probability of zero live cells is 0.85^25 ≈ 1.7% —
+            // retry a few times to make the test reliable.
+            bool anyAlive = false;
+            for (int attempt = 0; attempt < 5 && !anyAlive; attempt++)
+            {
+                var grid = new Grid(5, 5);
+                grid.InitializeGrid(cellSize: 10, random: true);
+                anyAlive = grid.Cells.Any(c => c.IsAlive);
+            }
+
+            Assert.True(anyAlive);
+        }
+
+        [Fact]
+        public void InitializeGrid_ClearsExistingCells()
+        {
+            var grid = new Grid(2, 2);
+            grid.InitializeGrid(cellSize: 10, random: false);
+            grid.InitializeGrid(cellSize: 10, random: false); // second call
+
+            Assert.Equal(4, grid.Cells.Count);
+        }
+
+        [Fact]
+        public void InitializeGrid_CellsAreInRowMajorOrder()
+        {
+            int rows = 3, cols = 3;
+            var grid = new Grid(rows, cols);
+            grid.InitializeGrid(cellSize: 10, random: false);
+
+            for (int i = 0; i < grid.Cells.Count; i++)
+            {
+                Assert.Equal(i % cols, grid.Cells[i].XPos);
+                Assert.Equal(i / cols, grid.Cells[i].YPos);
+            }
         }
 
         [Fact]
