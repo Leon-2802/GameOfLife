@@ -24,7 +24,7 @@ So I came back to this project, and got to work:
 3. I parallelized the advance-step between the generations and the initialization of the grid.
 4. With the gained speed-up I followed [Gustafson's law](https://en.wikipedia.org/wiki/Gustafson%27s_law) and made the grid larger. The goal was to get the grid as large as possible while staying below 100ms calculation time per advance-step. The maximum grid size that I could reach while barely staying below the 100ms mark on my system was 1500 x 1500.
 
-Of course the end result does not please a performance oriented developer. I could try to push the performance further and make it more adaptable to different systems while sticking to C# and its concurrency framework, but that is not what I want to do. During my parallel computing class, we wrote a few projects with NVIDIAs CUDA framework. As Game Of Life is perfectly parallel, it fits the SIMD-architecture of a GPU perfectly, which should make it a perfect choice for a (beginner) CUDA project.
+Of course the end result does not please a performance oriented developer. I could try to push the performance further and make it more adaptable to different systems while sticking to C# and its concurrency framework, but that is not what I want to do. During my parallel computing class, we wrote a few projects with NVIDIAs CUDA framework. As Game Of Life is perfectly parallel, it fits the SIMD-architecture of a GPU perfectly, which should make it a perfect choice for a (beginner) [CUDA project](https://github.com/Leon-2802/CUDA-Driven-GameOfLife).
 
 ### Running the program
 Navigate to the Actions-tab of this repo and select the newest workflow run. Then scroll down and download the artifact.
