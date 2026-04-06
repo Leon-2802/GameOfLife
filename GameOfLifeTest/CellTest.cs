@@ -11,7 +11,7 @@ namespace GameOfLife
     {
         private Cell CreateCell(int x, int y)
         {
-            return new Cell(new Point(x, y), x, y);
+            return new Cell(x, y);
         }
 
         [Fact]
