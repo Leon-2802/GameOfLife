@@ -5,25 +5,17 @@ namespace GameOfLife
 {
     public class Cell
     {
-        // Location of top corner of the field the cell covers; depends on cell size on the UI
-        private Point uiLocation; 
         private int xPos;
         private int yPos;
         private Boolean isAlive;
         private Boolean allowLiving;
 
-        public Cell(Point location, int x, int y)
+        public Cell(int x, int y)
         {
-            this.UILocation = location;
             this.XPos = x;
             this.YPos = y;
         }
 
-        public Point UILocation
-        {
-            get { return uiLocation; }
-            set { uiLocation = value; }
-        }
         public int XPos
         {
             get { return xPos; }
@@ -66,12 +58,6 @@ namespace GameOfLife
                 if (activeCount == 3)
                     this.AllowLiving = true;
             }
-        }
-
-        public override string ToString()
-        {
-            // Override the way list is printed out:
-            return $"GridX:{this.XPos} GridY:{this.YPos} LocX{this.UILocation.X} LocY:{this.UILocation.Y}";
         }
     }
 }

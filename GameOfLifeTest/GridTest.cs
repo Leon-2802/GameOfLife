@@ -14,7 +14,7 @@ namespace GameOfLife
             {
                 for (int x = 0; x < cols; x++)
                 {
-                    grid.Cells.Add(new Cell(new Point(x, y), x, y));
+                    grid.Cells.Add(new Cell(x, y));
                 }
             }
 
@@ -51,19 +51,6 @@ namespace GameOfLife
                     Assert.Equal(y, cell.YPos);
                 }
             }
-        }
-
-        [Fact]
-        public void InitializeGrid_CellsHaveCorrectPixelPositions()
-        {
-            int cellSize = 16;
-            var grid = new Grid(2, 3);
-            grid.InitializeGrid(cellSize, random: false);
-
-            Assert.Equal(new Point(0, 0), grid.Cells[0].UILocation);
-            Assert.Equal(new Point(cellSize, 0), grid.Cells[1].UILocation);
-            Assert.Equal(new Point(2 * cellSize, 0), grid.Cells[2].UILocation);
-            Assert.Equal(new Point(0, cellSize), grid.Cells[3].UILocation);
         }
 
         [Fact]

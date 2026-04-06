@@ -1,4 +1,6 @@
 ﻿
+using System.Windows.Forms;
+
 namespace GameOfLife
 {
     partial class GameOfLife
@@ -52,6 +54,9 @@ namespace GameOfLife
             this.gameArea.TabIndex = 0;
             this.gameArea.TabStop = false;
             this.gameArea.MouseClick += new System.Windows.Forms.MouseEventHandler(this.gameArea_MouseClick);
+            this.gameArea.MouseDown += new System.Windows.Forms.MouseEventHandler(this.gameArea_MouseDown);
+            this.gameArea.MouseUp += new System.Windows.Forms.MouseEventHandler(this.gameArea_MouseUp);
+            this.gameArea.MouseMove += new System.Windows.Forms.MouseEventHandler(this.gameArea_MouseMove);
             // 
             // numCSize
             // 

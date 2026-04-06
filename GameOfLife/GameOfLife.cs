@@ -14,30 +14,34 @@ namespace GameOfLife
         private Boolean running = false;
         private System.Windows.Forms.Timer gameTimer = new System.Windows.Forms.Timer();
         private Grid cellGrid;
+        private Point panOffset = Point.Empty;
+        private Point panStart = Point.Empty;
+        private bool isPanning = false;
 
         public GameOfLife()
         {
             InitializeComponent();
             // System.Windows.Forms.Timer fires the registered method at regular intervals without blocking the UI Thread
-            gameTimer.Interval = 100; // ms between ticks
-            gameTimer.Tick += (s, e) => Advance(); // method to be thrown at each tick
+            this.gameTimer.Interval = 100; // ms between ticks
+            this.gameTimer.Tick += (s, e) => Advance(); // method to be thrown at each tick
         }
 
         private void Load_GameOfLife(object sender, EventArgs e)
         {
-            cellGrid = new Grid(1_000, 1_000);
-            cellGrid.InitializeGrid((int)numCSize.Value, true);
+            // ADJUST: Lower the grid size, if your system does not support the load of handling the current grid size
+            this.cellGrid = new Grid(1_500, 1_500);
+            this.cellGrid.InitializeGrid((int)this.numCSize.Value, true);
             UpdateCellGridView();
         }
 
         private void ResetBtn_Click(object sender, EventArgs e)
         {
-            cellGrid.InitializeGrid((int)numCSize.Value, true);
+            this.cellGrid.InitializeGrid((int)this.numCSize.Value, true);
             UpdateCellGridView();
         }
         private void ClearBtn_Click(object sender, EventArgs e)
         {
-            cellGrid.InitializeGrid((int)numCSize.Value, false);
+            this.cellGrid.InitializeGrid((int)this.numCSize.Value, false);
             UpdateCellGridView();
         }
 
@@ -48,87 +52,133 @@ namespace GameOfLife
 
         private void StartBtn_Click(object sender, EventArgs e)
         {
-            running = !running;
+            this.running = !this.running;
 
-            startBtn.Text = running ? "Stop" : "Start";
+            this.startBtn.Text = running ? "Stop" : "Start";
 
             if (running )
             {
-                gameTimer.Start();
+                this.gameTimer.Start();
             }
             else
             {
-                gameTimer.Stop();
+                this.gameTimer.Stop();
             }
         }
 
         private void gameArea_MouseClick(object sender, MouseEventArgs e)
         {
-            int cellIndex;
+            if (e.Button == MouseButtons.Left)
+            {
+                int cellSize = (int)this.numCSize.Value;
 
-            // Get cell size 
-            int cellSize = (int) numCSize.Value;
+                int startCol = Math.Clamp(-this.panOffset.X / cellSize, 0, this.cellGrid.Cols - 1);
+                int startRow = Math.Clamp(-this.panOffset.Y / cellSize, 0, this.cellGrid.Rows - 1);
 
-            // Get the correct square on the grid, the mouse is hovering on
-            int Xloc = e.X / cellSize;
-            int YLoc = e.Y / cellSize;
+                // Get the correct square on the grid, the mouse is hovering on
+                int col = startCol + e.X / cellSize;
+                int row = startRow + e.Y / cellSize;
 
+                if (col < this.cellGrid.Cols || row < this.cellGrid.Rows) // Bounds check
+                {
+                    int cellIndex = row * this.cellGrid.Cols + col;
+                    // Switch the state of the clicked cell
+                    this.cellGrid.Cells[cellIndex].IsAlive = !this.cellGrid.Cells[cellIndex].IsAlive;
 
-            // Get cell list index from grid index
-            cellIndex = (YLoc * cellGrid.Cols) + Xloc;
+                    UpdateCellGridView();
+                }
+            }
+        }
 
-            // Flip state of cell between dead and alive
-            cellGrid.Cells[cellIndex].IsAlive = !cellGrid.Cells[cellIndex].IsAlive;
+        private void gameArea_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Middle)
+            {
+                this.running = false;
+                this.isPanning = true;
+                this.panStart = e.Location;
+                this.gameArea.Cursor = Cursors.SizeAll; // visual feedback
+            }
+        }
 
-            UpdateCellGridView();
+        private void gameArea_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Middle)
+            {
+                this.running = true;
+                this.isPanning = false;
+                this.gameArea.Cursor = Cursors.Default;
+            }
+        }
+
+        private void gameArea_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (this.isPanning)
+            {
+                this.panOffset.X += e.X - this.panStart.X;
+                this.panOffset.Y += e.Y - this.panStart.Y;
+                this.panStart = e.Location;
+                UpdateCellGridView();
+            }
         }
 
         private void GameOfLife_FormClosing(object sender, FormClosingEventArgs e)
         {
             // End program when closing window
-            running = false;
+            this.running = false;
             Application.Exit();
         }
 
         private void Advance()
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            cellGrid.AdvanceOneGeneration();
-            watch.Stop();
-            Console.WriteLine("Runtime Advance-Step: " + watch.ElapsedMilliseconds.ToString());
-            UpdateCellGridView();
+            if (this.running)
+            {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                this.cellGrid.AdvanceOneGeneration();
+                watch.Stop();
+                Console.WriteLine("Runtime Advance-Step: " + watch.ElapsedMilliseconds.ToString() + "ms");
+                UpdateCellGridView();
+            }
         }
 
-        //REFACTOR: Incorrect display of cells (Tests pass, so generations are correctly computed)
         private void UpdateCellGridView()
         {
             // Limit existense of included objects to the scope of this method
-            using (Bitmap bmp = new Bitmap(gameArea.Width, gameArea.Height))
+            using (Bitmap bmp = new Bitmap(this.gameArea.Width, this.gameArea.Height))
             using (Graphics g = Graphics.FromImage(bmp))
             using (SolidBrush cellBrush = new SolidBrush(Color.Green))
             {
                 g.Clear(Color.Black);
 
-                int cellSize = (int)numCSize.Value;
-                int visibleCols = Math.Min(gameArea.Width / cellSize, cellGrid.Cols);
-                int visibleRows = Math.Min(gameArea.Height / cellSize, cellGrid.Rows);
-                Console.WriteLine("Visible rows and columns: " + visibleRows + ", " + visibleCols);
+                int cellSize = (int)this.numCSize.Value;
 
+                int startCol = Math.Clamp(-this.panOffset.X / cellSize, 0, this.cellGrid.Cols - 1);
+                int startRow = Math.Clamp(-this.panOffset.Y / cellSize, 0, this.cellGrid.Rows - 1);
+
+                // Limits visible range when panning out of bounds
+                int visibleCols = Math.Min(this.gameArea.Width / cellSize, this.cellGrid.Cols - startCol);
+                int visibleRows = Math.Min(this.gameArea.Height / cellSize, this.cellGrid.Rows - startRow);
+
+                // FYI: Parallelization is not a good idea in the case of drawing the cells, even though it may seem like it:
+                // - GDI+ is not thread safe
+                // - The loop operations are very cheap and only limited to a small subarea of the grid matrix
                 for (int row = 0; row < visibleRows; row++)
                 {
                     for (int col = 0; col < visibleCols; col++)
                     {
-                        Cell cell = cellGrid.Cells[row * cellGrid.Cols + col];
+                        Cell cell = this.cellGrid.Cells[(startRow + row) * this.cellGrid.Cols + (startCol + col)];
                         if (cell.IsAlive)
                         {
-                            g.FillRectangle(cellBrush, new Rectangle(cell.UILocation,
+                            // Draw at screen-relative position
+                            g.FillRectangle(cellBrush, new Rectangle(
+                                new Point(col * cellSize, row * cellSize),
                                 new Size(cellSize - 1, cellSize - 1)));
                         }
                     }
                 }
 
-                gameArea.Image?.Dispose(); // keep in mind, that Image is null before first run
-                gameArea.Image = (Bitmap)bmp.Clone();
+                this.gameArea.Image?.Dispose();
+                this.gameArea.Image = (Bitmap)bmp.Clone();
             }
         }
 

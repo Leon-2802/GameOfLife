@@ -44,16 +44,13 @@ namespace GameOfLife
             for (int y = 0; y < rows; y++)
             {
                 Parallel.ForEach(
-                    Partitioner.Create(0, rowCells.Length, 50),
+                    Partitioner.Create(0, rowCells.Length, 200),
                     range =>
                     {
                         // loop over the indeces included in the range
                         for (int x = range.Item1; x < range.Item2; x++)
                         {
-                            Cell newCell = new Cell(
-                                new Point(x * cellSize, y * cellSize),
-                                x,
-                                y);
+                            Cell newCell = new Cell(x, y);
 
                             newCell.IsAlive = random && (Random.Shared.Next(100) < 15);
                             rowCells[x] = newCell;
@@ -69,13 +66,13 @@ namespace GameOfLife
             }
 
             watch.Stop();
-            Console.WriteLine("Runtime grid initialization: " + watch.ElapsedMilliseconds.ToString());
+            Console.WriteLine("Runtime grid initialization: " + watch.ElapsedMilliseconds.ToString() + "ms");
         }
 
         public void AdvanceOneGeneration()
         {
             Parallel.ForEach(
-                Partitioner.Create(0, Cells.Count, 50),
+                Partitioner.Create(0, Cells.Count, 200),
                 range =>
                 {
                     // loop over the indeces included in the range
