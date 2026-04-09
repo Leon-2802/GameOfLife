@@ -43,20 +43,13 @@ namespace GameOfLife
             // Create and add cells to the Grid object in row-major order
             for (int y = 0; y < rows; y++)
             {
-                Parallel.ForEach(
-                    Partitioner.Create(0, rowCells.Length, 200),
-                    range =>
-                    {
-                        // loop over the indeces included in the range
-                        for (int x = range.Item1; x < range.Item2; x++)
-                        {
-                            Cell newCell = new Cell(x, y);
+                for (int x = 0; x < cols; x++)
+                {
+                    Cell newCell = new Cell(x, y);
 
-                            newCell.IsAlive = random && (Random.Shared.Next(100) < 15);
-                            rowCells[x] = newCell;
-                        }
-                    });
-
+                    newCell.IsAlive = random && (Random.Shared.Next(100) < 15);
+                    rowCells[x] = newCell;
+                }
                 // Single-threaded add after parallel work is done
                 foreach (Cell cell in rowCells)
                 {

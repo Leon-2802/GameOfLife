@@ -29,7 +29,7 @@ namespace GameOfLife
         private void Load_GameOfLife(object sender, EventArgs e)
         {
             // ADJUST: Lower the grid size, if your system does not support the load of handling the current grid size
-            this.cellGrid = new Grid(1_500, 1_500);
+            this.cellGrid = new Grid(1500, 1500);
             this.cellGrid.InitializeGrid((int)this.numCSize.Value, true);
             UpdateCellGridView();
         }
