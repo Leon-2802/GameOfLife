@@ -29,7 +29,7 @@ namespace GameOfLife
         private void Load_GameOfLife(object sender, EventArgs e)
         {
             // ADJUST: Lower the grid size, if your system does not support the load of handling the current grid size
-            this.cellGrid = new Grid(1_500, 1_500);
+            this.cellGrid = new Grid(1500, 1500);
             this.cellGrid.InitializeGrid((int)this.numCSize.Value, true);
             UpdateCellGridView();
         }
@@ -47,7 +47,11 @@ namespace GameOfLife
 
         private void AdvanceBtn_Click(object sender, EventArgs e)
         {
-            Advance();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            this.cellGrid.AdvanceOneGeneration();
+            watch.Stop();
+            Console.WriteLine("Runtime Advance-Step: " + watch.ElapsedMilliseconds.ToString() + "ms");
+            UpdateCellGridView();
         }
 
         private void StartBtn_Click(object sender, EventArgs e)
