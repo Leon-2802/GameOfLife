@@ -26,6 +26,9 @@ So I came back to this project, and got to work:
 
 Of course the end result does not please a performance oriented developer. I could try to push the performance further and make it more adaptable to different systems while sticking to C# and its concurrency framework, but that is not what I want to do. During my parallel computing class, we wrote a few projects with NVIDIAs CUDA framework. As Game Of Life is perfectly parallel, it fits the SIMD-architecture of a GPU perfectly, which should make it a perfect choice for a (beginner) [CUDA project](https://github.com/Leon-2802/CUDA-Driven-GameOfLife).
 
+#### Results
+As statet above, the maximum grid size that I could achieve with the parallelized version
+
 ### Running the program
 Navigate to the Actions-tab of this repo and select the newest workflow run. Then scroll down and download the artifact.
 You will recieve a zipped Windows-executable.

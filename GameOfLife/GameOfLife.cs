@@ -47,7 +47,11 @@ namespace GameOfLife
 
         private void AdvanceBtn_Click(object sender, EventArgs e)
         {
-            Advance();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            this.cellGrid.AdvanceOneGeneration();
+            watch.Stop();
+            Console.WriteLine("Runtime Advance-Step: " + watch.ElapsedMilliseconds.ToString() + "ms");
+            UpdateCellGridView();
         }
 
         private void StartBtn_Click(object sender, EventArgs e)
