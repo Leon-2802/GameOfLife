@@ -27,7 +27,7 @@ So I came back to this project, and got to work:
 Of course the end result does not please a performance oriented developer. I could try to push the performance further and make it more adaptable to different systems while sticking to C# and its concurrency framework, but that is not what I want to do. During my parallel computing class, we wrote a few projects with NVIDIAs CUDA framework. As Game Of Life is perfectly parallel, it fits the SIMD-architecture of a GPU perfectly, which should make it a perfect choice for a (beginner) [CUDA project](https://github.com/Leon-2802/CUDA-Driven-GameOfLife).
 
 ### Results
-As statet above, the maximum grid size that I could achieve with the parallelized version was 1500 x 1500. Below I will list a few benchmarks to show the effect of the parallelization. All benchmarks are the average runtime of 3 consecutive runs.
+As statet above, the maximum grid size that I could achieve with the parallelized version while staying below 100ms per advance-step was 1500 x 1500. Below I will list a few benchmarks to show the effect of the parallelization. All benchmarks are the average runtime of 3 consecutive runs.
 #### Benchmarks - Grid size 10000 x 10000
 I started my benchmarks with a grid size of 10000 x 10000 (quite ambitious, I know).
 ##### Sequential
@@ -36,20 +36,24 @@ I started my benchmarks with a grid size of 10000 x 10000 (quite ambitious, I kn
 ##### Parallel (With batch-size 100)
 - Grid initialization: 8653ms (only each row is calculated in parallel)
 - Advance step: 4323ms
+##### Parallel (With batch-size (10000 x 10000) / number of logical processors)
+- Advance step: 3738ms
 #### Benchmarks - Grid size 1500 x 1500
-I tried around a bit, but qickly settled on 1500 x 1500, as already a slightly larger grid had advance-step runtimes too high above 100ms. I settled for a batch-size of 200, as it gave a few more milliseconds of runtime compared to smaller batch sizes, although this could still be further evaluated.
+I tried around a bit, but qickly settled on 1500 x 1500, as already a slightly larger grid had advance-step runtimes too high above 100ms.
 ##### Sequential
 - Grid initialization: 209ms
 - Advance step: 752ms
-##### Parallel (with batch-size 200)
+##### Parallel (With batch-size 200)
 - Grid initialization: 362ms (only each row is calculated in parallel)
-- 96ms (with rare spikes slightly above 100ms during longer runtimes)
+- Advance step: 96ms (with rare spikes slightly above 100ms during longer runtimes)
+##### Parallel (With batch-size (1500 x 1500) / number of logical processors)
+- Advance step: 98.5ms (with rare spikes slightly above 100ms during longer runtimes)
 #### Evaluation
-- The most important part of the observation was, that thanks to the parallelized computation of the cell states in batches of 200, we could accelarate the calculation of the advance step by a factor of ~7.8. For a 10000 x 10000 grid the factor is around 8.08, which proves that the parallelization scales well.
+- The most important part of my observation was that distributing the work of the advance step on 24 threads seems to yield the maximum possible speedup. Using more threads does not increase the speedup by much, it even lowers it for larger problem sizes.
+- Using **one thread per logical core** (24 on my sytem) we get a **speedup factor of ~7.6** for a problem size of 1500 x 1500. For a **10000 x 10000 grid the factor is around 9.34**, which proves that the parallelization scales well.
 - Having the runtime of the advance step be below or just around 100ms is the most essential part as significantly longer runtimes are easily observable on the screen by the user and make the program look slow.
 - Interestingly this does not hold true for the benchmarks for the grid initialization. On the bigger grid it runs a bit slower when parallelized. On the smaller grid the sequential calculation is even 1.7 times faster, probably due to the overhead of the parallelization producing extra work.
-- It is possible that a smarter parallelization of the grid initialization could become useful for larger problem sizes (which is why I pursued all further parallelization attempts for Game Of Life in CUDA). For this project, I left the initialization sequential.
-
+- As a slightly longer runtime than 100ms during the grid initialization does not interrupt the flow of interacting with the program, it can be left as it is.
 
 ## Running the program
 Navigate to the Actions-tab of this repo and select the newest workflow run. Then scroll down and download the artifact.
