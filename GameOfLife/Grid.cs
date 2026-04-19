@@ -13,11 +13,14 @@ namespace GameOfLife
 
         private int rows;
         private int cols;
+        private readonly int batchSize;
 
         public Grid(int rows, int cols)
         {
             this.Rows = rows;
             this.Cols = cols;
+            this.batchSize = (rows*cols) / Environment.ProcessorCount;
+            Console.WriteLine("Batch size for parallel advance-step: " + this.batchSize);
         }
 
         public int Rows
@@ -65,7 +68,7 @@ namespace GameOfLife
         public void AdvanceOneGeneration()
         {
             Parallel.ForEach(
-                Partitioner.Create(0, Cells.Count, 200),
+                Partitioner.Create(0, Cells.Count, this.batchSize),
                 range =>
                 {
                     // loop over the indeces included in the range
